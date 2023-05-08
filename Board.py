@@ -24,7 +24,7 @@ board_meta = {
     }
 }
 
-# GameAgent
+# Board
 class Board:
     def __init__(self, level="easy", free=1):
         '''

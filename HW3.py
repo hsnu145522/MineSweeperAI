@@ -23,7 +23,7 @@ class MineSweeper:
         # os.mkdir(self.foldername)
     
     def start(self):
-        print("Game Started ...")
+        # print("Game Started ...")
         while self.checkEnd():
             flag = self.playerAgent.iter()
             if flag > 0:
@@ -34,10 +34,10 @@ class MineSweeper:
                     # plt.clf()
             else:
                 break
-        print('--------------------')
-        print(f'{self.playerAgent.cnt} / {self.board.cell_num} cells marked/ all cells')
-        print(f'Pairwise matching: {self.playerAgent.not_found} times')
-        print("--------------------")
+        # print('--------------------')
+        # print(f'{self.playerAgent.cnt} / {self.board.cell_num} cells marked/ all cells')
+        # print(f'Pairwise matching: {self.playerAgent.not_found} times')
+        # print("--------------------")
         if self.playerAgent.cnt < self.board.cell_num:
             self.plot_board()
             plt.savefig(f'test/{level}_{self.playerAgent.cnt}_{int(time.time())}final.png', dpi=300, transparent=True)
@@ -90,23 +90,29 @@ class MineSweeper:
 
 if __name__ == "__main__":
     level = "hard"
-    timestoplay = 1
+    timestoplay = 50
     win = 0
     num_matches = []
-    free = 2
-    for i in range(timestoplay):
-        # if i%25:
-        #     free+=1
-        game = MineSweeper(level, free)
-        flag, num = game.start()
-        num_matches.append(num)
-        if flag:
-            win+=1
+    frees = [0.5, 1, 2]
+    for free in frees:
+        for i in range(1, timestoplay+1):
+            game = MineSweeper(level, free)
+            flag, num = game.start()
+            num_matches.append(num)
+            if flag:
+                win+=1
+        print("-----------------------------------")
+        print(f"times of free initial cells: {free}")
+        print(f"level: {level}  {win}/{i}")
+        print(f"matches per play {sum(num_matches)/len(num_matches)}")
+        print("-----------------------------------")
+        win = 0
+        num_matches = []
     
-    print("-----------------------------------")
-    print(f"level: {level}  {win}/{timestoplay}")
-    print(f"matches per play {sum(num_matches)/len(num_matches)}")
-    print("-----------------------------------")
+    # print("-----------------------------------")
+    # print(f"level: {level}  {win}/{timestoplay}")
+    # print(f"matches per play {sum(num_matches)/len(num_matches)}")
+    # print("-----------------------------------")
 
 
 
