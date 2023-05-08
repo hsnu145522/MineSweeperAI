@@ -55,7 +55,7 @@ class PlayerAgent:
 
     # check whether the two clauses are identical
     # Both clause1 and clause2 are lists.
-    def duplicate_pairwise(self,clause1, clause2):
+    def isduplicate_pairwise(self,clause1, clause2):
         match = 0
         for literal in clause1:
             if literal in clause2:
@@ -68,18 +68,18 @@ class PlayerAgent:
     # check whether there exists any clause identical to the given clause in the
     # knowledge base 
     # targetclause is a list contain strings in it.
-    def duplicate(self,targetclause):
+    def hasduplicate(self,targetclause):
         if type(targetclause)==type(""):
             targetclause = [targetclause]
         for clause in self.KB:
-            if self.duplicate_pairwise(targetclause, clause):
+            if self.isduplicate_pairwise(targetclause, clause):
                 return True
         return False
 
 
     # subsumption for single-literal clause
     # clause is just a string in this function
-    def subsumption_single(self, clause):
+    def literal_subsumption(self, clause):
         for i in range(len(self.KB)):
             if clause in self.KB[i]:
                 self.KB[i] = []
@@ -164,13 +164,13 @@ class PlayerAgent:
             unmark_cells = self.get_unmark_cells()
             for clause in list(comb(unmark_cells, unmark_cell_num-unmark_mine_num+1)):
                 clause = list(clause)
-                if not self.duplicate(clause):
+                if not self.hasduplicate(clause):
                     self.subsumption(clause)
             for clause in list(comb(unmark_cells, unmark_mine_num+1)):
                 clause = list(clause)
                 for i in range(len(clause)):
                     clause[i] = f'not {clause[i]}'
-                if not self.duplicate(clause):
+                if not self.hasduplicate(clause):
                     self.subsumption(clause)
         
         # Normal Loop
@@ -194,7 +194,7 @@ class PlayerAgent:
                     self.board.unmark_cell_num -=1
 
                     # remove clause[0] (not {targetgame})
-                    self.subsumption_single(clause[0])
+                    self.literal_subsumption(clause[0])
 
                     # Process the "matching" of that clause to all the remaining clauses in the KB.
 
@@ -216,30 +216,32 @@ class PlayerAgent:
                     neighbors = [n for n in neighbors if len(n) > 0]
                     # m = number of unmarked neighbors
                     # n = hint
+                    m = len(neighbors)
+                    n = hint
                     # (m == n): insert the m single-literal positive clauses
                     # to the knowledge base, one for each unmarked neighbor
-                    if hint == len(neighbors):
-                        for n in neighbors:
-                            if not self.duplicate(n):
-                                self.KB.append([n])
+                    if m == n:
+                        for neighbor in neighbors:
+                            if not self.hasduplicate(neighbor):
+                                self.KB.append([neighbor])
                     # (n == 0): insert the m single-literal negative clauses
                     # to the knowledge base, one for each unmarked neighbor
-                    elif hint == 0:
-                        for n in neighbors:
-                            if not self.duplicate(f'not {n}'):
-                                self.KB.append([f'not {n}'])
+                    elif n == 0:
+                        for neighbor in neighbors:
+                            if not self.hasduplicate(f'not {neighbor}'):
+                                self.KB.append([f'not {neighbor}'])
                     # (m > n > 0): generate CNF clauses and add them to the
                     # knowledge base
-                    elif len(neighbors) > hint:
+                    elif m > n:
                         for clause in list(comb(neighbors, len(neighbors)-hint+1)):
                             clause = list(clause)
-                            if not self.duplicate(clause):
+                            if not self.hasduplicate(clause):
                                 self.subsumption(clause)
                         for clause in list(comb(neighbors, hint+1)):
                             clause = list(clause)
                             for i in range(len(clause)):
                                 clause[i] = f'not {clause[i]}'
-                            if not self.duplicate(clause):
+                            if not self.hasduplicate(clause):
                                 self.subsumption(clause)
                     else:
                         print(f'ERROR: hint: {hint}, neighbors: {len(neighbors)}')                  
@@ -252,7 +254,7 @@ class PlayerAgent:
                     self.KB[i]  = []
                     self.board.unmark_cell_num -= 1
                     self.board.unmark_mine_num -= 1
-                    self.subsumption_single(clause[0])
+                    self.literal_subsumption(clause[0])
                     # clause[0] is true, so remove all not {clause[0]}
                     for j in range(len(self.KB)):
                         if f'not {clause[0]}' in self.KB[j]:
@@ -276,17 +278,17 @@ class PlayerAgent:
                     if len(self.KB[j])==0:
                         continue
                     # check whether the two clauses are identical
-                    if not self.duplicate_pairwise(self.KB[i], self.KB[j]):
+                    if not self.isduplicate_pairwise(self.KB[i], self.KB[j]):
                         if not self.subsumption_pairwise(i, j):
                             '''
                             For the step of pairwise matching, to keep the KB from growing too fast, only
                             match clause pairs where one clause has only two literals.
                             '''
-                            if len(self.KB[i])>3 and len(self.KB[j])>3:
+                            if len(self.KB[i])>2 and len(self.KB[j])>2:
                                 continue
                             new_clause = self.comp(self.KB[i], self.KB[j])
                             if new_clause:
-                                if not self.duplicate(new_clause):
+                                if not self.hasduplicate(new_clause):
                                     if self.subsumption(new_clause):
                                         update = True
                         else:
